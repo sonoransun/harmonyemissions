@@ -1,0 +1,29 @@
+# Apollon 10 PW (Ti:Sa 0.8 μm, ~24 fs) driving the surface_pipeline/CHF
+# stack. A₀ pushed higher than the preset reference for a 10-PW shot;
+# expected to reach the hard-X-ray band (keV) through the relativistic-spikes
+# cutoff at γ_max³.
+model: surface_pipeline
+backend: analytical
+
+laser:
+  preset: apollon
+  a0: 60.0
+  angle_deg: 45.0
+  spatial_profile: super_gaussian
+  spot_fwhm_um: 2.5
+  super_gaussian_order: 8
+
+target:
+  kind: overdense
+  material: SiO2
+  n_over_nc: 200.0
+  gradient_L_over_lambda: 0.14
+  reflectivity: 0.6
+  t_HDR_fs: 351.0
+
+numerics:
+  n_periods: 25.0
+  samples_per_period: 512
+  pipeline_grid: 128
+  pipeline_dx_um: 0.06
+  diag_harmonics: [1, 40, 200, 800]

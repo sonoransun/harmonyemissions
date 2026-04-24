@@ -1,0 +1,21 @@
+# Gas-phase HHG in argon via the (simplified) Lewenstein model.
+model: lewenstein
+backend: analytical
+
+laser:
+  a0: 0.08                # ~ 1.4e14 W/cm² at 800 nm
+  wavelength_um: 0.8
+  duration_fs: 20.0
+  cep: 0.0
+  polarization: linear
+  envelope: gaussian
+
+target:
+  kind: gas
+  gas_species: Ar
+  pressure_mbar: 20.0
+
+numerics:
+  n_periods: 40.0
+  samples_per_period: 512
+  harmonic_window: [17.0, 41.0]  # typical plateau for Ar at this intensity

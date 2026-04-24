@@ -1,0 +1,18 @@
+# Base config for a parameter scan — varied by `harmony scan ... --param ...`.
+# Example: `harmony scan configs/scan_example.yaml --param laser.a0=1,2,5,10,20 -d runs/`
+model: bgp
+backend: analytical
+
+laser:
+  a0: 5.0                # placeholder; scan sweeps this
+  wavelength_um: 0.8
+  duration_fs: 10.0
+
+target:
+  kind: overdense
+  n_over_nc: 100.0
+  gradient_L_over_lambda: 0.1
+
+numerics:
+  n_periods: 20.0
+  samples_per_period: 512

@@ -1,0 +1,254 @@
+# -------------------------------------------------------------------------
+# Harmony of Emissions — .gitignore
+#
+# Covers standard Python development, every tool cache `make check`,
+# `make bench`, and `make images` touch, Jupyter scratch, OS / IDE junk,
+# and the project's own scientific run outputs. Intentionally conservative
+# on YAML / Markdown / Python sources so nothing tracked disappears.
+#
+# Source of truth: the GitHub-maintained Python .gitignore plus project
+# specifics. Review when adopting a new package manager, editor,
+# experiment tracker, or output format.
+# -------------------------------------------------------------------------
+
+
+# --- Python bytecode, C extensions, packaging ----------------------------
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.pyd
+*.pyo
+
+*.egg
+*.egg-info/
+.eggs/
+build/
+dist/
+wheels/
+*.whl
+sdist/
+MANIFEST
+pip-log.txt
+pip-delete-this-directory.txt
+pip-wheel-metadata/
+
+# setuptools / pyinstaller side-effects (root-anchored to avoid sweeping
+# a legitimate source directory named `lib/` or similar downstream).
+/lib/
+/lib64/
+/parts/
+/var/
+/share/python-wheels/
+*.manifest
+*.spec
+
+# Cython intermediates, if ever introduced
+*.c.bak
+*.pyx.bak
+
+
+# --- Virtual environments -----------------------------------------------
+venv/
+.venv/
+env/
+ENV/
+.python-version
+.direnv/
+__pypackages__/
+
+# Modern package managers (future-proofing; none of these are in use yet)
+.rye/
+.uv/
+.pdm-python
+.pdm-build/
+.pixi/
+
+# NOTE: lockfiles (uv.lock / pixi.lock / poetry.lock) are *not* ignored —
+# commit them when the project adopts a locked dependency manager.
+
+
+# --- Testing & QA caches (everything `make check` touches) ---------------
+.pytest_cache/
+.hypothesis/
+.mypy_cache/
+.ruff_cache/
+.pre-commit-cache/
+.pyre/
+.pytype/
+.dmypy.json
+dmypy.json
+.tox/
+.nox/
+.cache/
+.python_history
+
+# Coverage artifacts
+.coverage
+.coverage.*
+.coverage-*
+coverage.xml
+htmlcov/
+*.cover
+*.lcov
+nosetests.xml
+.junit.xml
+
+
+# --- Benchmarks ----------------------------------------------------------
+.benchmarks/
+
+
+# --- Jupyter -------------------------------------------------------------
+.ipynb_checkpoints/
+*-checkpoint.ipynb
+profile_default/
+ipython_config.py
+
+
+# --- IDE / editors -------------------------------------------------------
+.idea/
+.vscode/
+.fleet/
+.zed/
+.nova/
+*.code-workspace
+*.swp
+*.swo
+*~
+.project
+.pydevproject
+.settings/
+.spyderproject
+.spyproject
+.ropeproject
+.ensime_cache/
+.metals/
+.bloop/
+
+# Vim / Emacs session & lock files
+Session.vim
+.netrwhist
+.#*
+\#*\#
+
+
+# --- OS junk -------------------------------------------------------------
+.DS_Store
+.AppleDouble
+.LSOverride
+Thumbs.db
+ehthumbs.db
+desktop.ini
+$RECYCLE.BIN/
+.fuse_hidden*
+.nfs*
+.Trash-*
+.directory
+
+
+# --- Secrets -------------------------------------------------------------
+.env
+.env.local
+.env.*.local
+.envrc
+secrets.yaml
+secrets.toml
+credentials.json
+*.pem
+*.key
+
+
+# --- Editor backups & patch residues ------------------------------------
+*.orig
+*.bak
+*.rej
+*.tmp
+
+
+# --- Simulation / scientific data formats -------------------------------
+# HDF5 + netCDF simulation artifacts written by `harmony run|chf|detector`.
+*.h5
+*.hdf5
+*.nc
+*.npy
+*.npz
+# EPOCH's native format
+*.sdf
+# Array / dataframe stores that a user might dump from the library
+*.zarr/
+*.parquet
+*.feather
+*.pkl
+*.pickle
+*.joblib
+*.mat
+
+# --- Run-output directories ---------------------------------------------
+# Default scan output directory and common variants + catch-alls for
+# whatever a user picks as `harmony run -o …`.
+runs/
+scan_*/
+sweep_*/
+output/
+outputs/
+results/
+tmp/
+temp/
+scratch/
+workdir/
+
+# Log files at any depth
+*.log
+
+
+# --- Experiment-tracking outputs ----------------------------------------
+wandb/
+mlruns/
+lightning_logs/
+tb_logs/
+tensorboard_logs/
+
+
+# --- Image / plot outputs ------------------------------------------------
+# `harmony plot` drops PNGs wherever the user points it; ignore broadly.
+*.png
+*.jpg
+*.jpeg
+*.svg
+# But keep any images we intentionally add to docs / examples.
+!docs/**/*.png
+!docs/**/*.jpg
+!docs/**/*.jpeg
+!docs/**/*.svg
+!examples/**/*.png
+!examples/**/*.jpg
+!examples/**/*.jpeg
+!examples/**/*.svg
+
+# PDFs are almost always outputs (plots, generated reports). Keep any tracked
+# docs PDFs through a negation.
+*.pdf
+!docs/**/*.pdf
+
+
+# --- Claude Code / AI tooling state --------------------------------------
+.claude/
+
+
+# --- Sphinx / site builds (if adopted later) ----------------------------
+docs/_build/
+docs/_autosummary/
+.doctrees/
+_site/
+_readthedocs/
+.jupyter-cache/
+site/
+
+
+# --- Test fixtures -------------------------------------------------------
+# Future-proofing: anything intentionally placed under tests/fixtures/
+# (HDF5, PNG, pickle, parquet, etc.) is tracked despite the broad rules
+# above.  No current files live here; the negation is preemptive.
+!tests/fixtures/
+!tests/fixtures/**

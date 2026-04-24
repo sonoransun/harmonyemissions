@@ -1,0 +1,22 @@
+# DiPOLE-100 (Yb:YAG DPSSL, 1.03 μm, ~500 fs, 10 Hz) ROM surface harmonics.
+# Long-pulse ps-class drive → longer pre-plasma scale length; ROM captures
+# the parametric oscillating-mirror harmonics in that regime.
+model: rom
+backend: analytical
+
+laser:
+  preset: dipole
+  angle_deg: 45.0
+  spatial_profile: super_gaussian
+  spot_fwhm_um: 6.0
+  super_gaussian_order: 6
+
+target:
+  kind: overdense
+  material: SiO2
+  n_over_nc: 150.0
+  gradient_L_over_lambda: 0.25
+
+numerics:
+  n_periods: 20.0
+  samples_per_period: 512

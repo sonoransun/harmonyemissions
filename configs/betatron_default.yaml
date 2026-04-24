@@ -1,0 +1,22 @@
+# Laser-wakefield betatron X-ray source.
+model: betatron
+backend: analytical
+
+laser:
+  a0: 2.0
+  wavelength_um: 0.8
+  duration_fs: 30.0
+  cep: 0.0
+  polarization: linear
+  envelope: sin2
+
+target:
+  kind: underdense
+  n_over_nc: 0.001
+  bubble_radius_um: 10.0
+  electron_energy_mev: 500.0
+  betatron_amplitude_um: 1.0
+
+numerics:
+  n_periods: 10.0
+  samples_per_period: 256

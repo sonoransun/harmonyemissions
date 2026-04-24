@@ -1,0 +1,33 @@
+# Replicate the Timmis et al. 2026 Gemini shot: 1.2 × 10²¹ W/cm² p-pol at 45°,
+# 50 fs FWHM, 2 μm FWHM super-Gaussian spot, fused silica target, DPM tuned to
+# t_HDR = 351 fs.  Expected harmonic yield in n = 12–47: ≈ 0.17 % efficiency.
+model: surface_pipeline
+backend: analytical
+
+laser:
+  a0: 24.0                     # paper's Methods: a₀ = 24 used in the PIC run
+  wavelength_um: 0.8
+  duration_fs: 50.0
+  polarization: p
+  envelope: gaussian
+  angle_deg: 45.0
+  spatial_profile: super_gaussian
+  spot_fwhm_um: 2.0
+  super_gaussian_order: 8
+
+target:
+  kind: overdense
+  material: SiO2
+  n_over_nc: 200.0
+  gradient_L_over_lambda: 0.14
+  reflectivity: 0.6
+  t_HDR_fs: 351.0
+  prepulse_intensity_rel: 1.0e-3
+  prepulse_delay_fs: 100.0
+
+numerics:
+  n_periods: 30.0
+  samples_per_period: 512
+  pipeline_grid: 128
+  pipeline_dx_um: 0.08
+  diag_harmonics: [1, 12, 25, 47]

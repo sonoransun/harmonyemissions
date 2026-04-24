@@ -1,0 +1,23 @@
+# Generic Yb:YAG scan template — swept with `harmony scan -p laser.a0=5,10,15,20`
+# to exercise the hard-X-ray filter + Ross-pair chain. Bremsstrahlung continuum
+# from a Cu target, T_hot derived from each a₀ via Wilks.
+model: bremsstrahlung
+backend: analytical
+
+laser:
+  preset: yb_yag_generic
+  a0: 5.0
+  angle_deg: 45.0
+  spatial_profile: super_gaussian
+  spot_fwhm_um: 3.0
+
+target:
+  kind: overdense
+  material: Cu
+  n_over_nc: 700.0
+  gradient_L_over_lambda: 0.05
+  t_HDR_fs: 500.0
+
+numerics:
+  n_periods: 20.0
+  samples_per_period: 256

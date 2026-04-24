@@ -1,0 +1,23 @@
+# POLARIS (Yb:glass DPSSL, 1.03 μm, ~100 fs) driving coherent wake emission.
+# Drive kept sub-relativistic by dropping a₀ below the preset reference;
+# also a backwards-compat regression for XUV-band detector at 1030 nm.
+model: cwe
+backend: analytical
+
+laser:
+  preset: polaris
+  a0: 0.3
+  angle_deg: 45.0
+  spatial_profile: gaussian
+  spot_fwhm_um: 5.0
+
+target:
+  kind: overdense
+  material: SiO2
+  n_over_nc: 400.0
+  gradient_L_over_lambda: 0.05
+  t_HDR_fs: 351.0
+
+numerics:
+  n_periods: 25.0
+  samples_per_period: 512

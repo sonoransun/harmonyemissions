@@ -1,0 +1,31 @@
+# 50 PW SEL extrapolation.  Shanghai SEL is the 50-PW facility that,
+# in the Timmis paper's Fig. 4, crosses the Schwinger intensity threshold
+# (~10²⁹ W/cm²) when paired with CHF.
+model: surface_pipeline
+backend: analytical
+
+laser:
+  a0: 130.0
+  wavelength_um: 0.8
+  duration_fs: 15.0
+  polarization: p
+  envelope: gaussian
+  angle_deg: 45.0
+  spatial_profile: super_gaussian
+  spot_fwhm_um: 1.5
+  super_gaussian_order: 8
+
+target:
+  kind: overdense
+  material: SiO2
+  n_over_nc: 200.0
+  gradient_L_over_lambda: 0.08
+  reflectivity: 0.45
+  t_HDR_fs: 351.0
+  prepulse_intensity_rel: 2.0e-4
+  prepulse_delay_fs: 40.0
+
+numerics:
+  pipeline_grid: 128
+  pipeline_dx_um: 0.06
+  diag_harmonics: [1, 60, 150, 300]

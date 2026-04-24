@@ -1,0 +1,25 @@
+# HAPLS driving a GeV-class LWFA → betatron X-rays / γ-rays.
+# 200 MeV → soft X-ray; 1 GeV → hard X-ray; 4 GeV → low-MeV γ band.
+# Pair with `harmony detector ... --band gamma --detector lyso-2cm`.
+model: betatron
+backend: analytical
+
+laser:
+  preset: hapls
+  a0: 3.0
+  cep: 0.0
+  polarization: linear
+  envelope: sin2
+  spatial_profile: gaussian
+  spot_fwhm_um: 15.0
+
+target:
+  kind: underdense
+  n_over_nc: 0.001
+  bubble_radius_um: 12.0
+  electron_energy_mev: 1500.0
+  betatron_amplitude_um: 1.5
+
+numerics:
+  n_periods: 12.0
+  samples_per_period: 256

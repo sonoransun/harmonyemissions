@@ -1,0 +1,31 @@
+# Base config for the DPM contrast scan reproducing Fig. 1b, c of the paper:
+# intended to be swept with
+#   harmony scan configs/dpm_contrast_scan.yaml -p target.t_HDR_fs=250,351,500,711,1000 -d runs/thdr
+model: surface_pipeline
+backend: analytical
+
+laser:
+  a0: 24.0
+  wavelength_um: 0.8
+  duration_fs: 50.0
+  polarization: p
+  envelope: gaussian
+  angle_deg: 45.0
+  spatial_profile: super_gaussian
+  spot_fwhm_um: 2.0
+  super_gaussian_order: 8
+
+target:
+  kind: overdense
+  material: SiO2
+  n_over_nc: 200.0
+  gradient_L_over_lambda: 0.14       # overwritten by the contrast model
+  reflectivity: 0.6
+  t_HDR_fs: 351.0                    # swept
+  prepulse_intensity_rel: 1.0e-3
+  prepulse_delay_fs: 100.0
+
+numerics:
+  pipeline_grid: 96
+  pipeline_dx_um: 0.1
+  diag_harmonics: [1, 12, 30, 47]

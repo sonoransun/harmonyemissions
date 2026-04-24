@@ -1,0 +1,26 @@
+# Sub-relativistic coherent wake emission (CWE).  Cutoff harmonic depends
+# only on √(n_e/n_c), independent of a₀.  Useful as a comparator for the
+# relativistic spikes / ROM regime when a₀ drops below ~1.
+model: cwe
+backend: analytical
+
+laser:
+  a0: 0.3
+  wavelength_um: 0.8
+  duration_fs: 30.0
+  polarization: p
+  envelope: gaussian
+  angle_deg: 45.0
+  spatial_profile: gaussian
+  spot_fwhm_um: 5.0
+
+target:
+  kind: overdense
+  material: SiO2
+  n_over_nc: 400.0
+  gradient_L_over_lambda: 0.05
+  t_HDR_fs: 351.0
+
+numerics:
+  n_periods: 25.0
+  samples_per_period: 512

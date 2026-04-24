@@ -1,0 +1,22 @@
+# Surface HHG on an overdense plasma via the relativistic oscillating mirror.
+model: rom
+backend: analytical
+
+laser:
+  a0: 10.0
+  wavelength_um: 0.8
+  duration_fs: 8.0
+  cep: 0.0
+  polarization: p
+  envelope: gaussian
+  angle_deg: 0.0
+
+target:
+  kind: overdense
+  n_over_nc: 100.0
+  gradient_L_over_lambda: 0.1
+
+numerics:
+  n_periods: 30.0
+  samples_per_period: 512
+  harmonic_window: [20.0, 60.0]  # attosecond pulse synthesis window

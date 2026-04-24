@@ -1,0 +1,76 @@
+# Laser presets for high-power plasma-driving systems.
+# Presets fill LaserConfig fields when `laser.preset: <name>` is set.
+# User-provided keys in laser.<field> always win over preset values.
+#
+# `a0_reference` is the best-shot reference a0 for the facility at
+# typical focusing; it is renamed to `a0` during merge unless the user
+# provided `laser.a0:` explicitly.
+#
+# Citations (cleaned up in docs/presets.md) point to the primary
+# facility-description paper.
+
+hapls:
+  facility: "HAPLS / ELI-Beamlines L3-HAPLS"
+  gain_medium: "Yb:YAG DPSSL (diode-pumped)"
+  wavelength_um: 1.030
+  duration_fs: 30.0
+  a0_reference: 15.0
+  polarization: p
+  envelope: gaussian
+  rep_rate_hz: 10.0
+  citation: "Bayramian et al., HPL 8 e29 (2020)"
+
+dipole:
+  facility: "DiPOLE-100 / CLF-RAL"
+  gain_medium: "Yb:YAG multi-slab DPSSL"
+  wavelength_um: 1.030
+  duration_fs: 500.0
+  a0_reference: 5.0
+  polarization: p
+  envelope: gaussian
+  rep_rate_hz: 10.0
+  citation: "Mason et al., HPL 6 e65 (2018)"
+
+bivoj:
+  facility: "BIVOJ / ELI-Beamlines L2-BIVOJ"
+  gain_medium: "Yb:YAG cryogenic DPSSL"
+  wavelength_um: 1.030
+  duration_fs: 500.0
+  a0_reference: 5.0
+  polarization: p
+  envelope: gaussian
+  rep_rate_hz: 10.0
+  citation: "Divoky et al., Opt. Lett. 46 5588 (2021)"
+
+polaris:
+  facility: "POLARIS / HI-Jena"
+  gain_medium: "Yb:glass DPSSL"
+  wavelength_um: 1.030
+  duration_fs: 98.0
+  a0_reference: 10.0
+  polarization: p
+  envelope: gaussian
+  rep_rate_hz: 0.1
+  citation: "Hornung et al., HPL 4 e31 (2016)"
+
+apollon:
+  facility: "Apollon / LULI-CNRS"
+  gain_medium: "Ti:Sapphire CPA"
+  wavelength_um: 0.800
+  duration_fs: 24.0
+  a0_reference: 30.0
+  polarization: p
+  envelope: gaussian
+  rep_rate_hz: 1.0
+  citation: "Papadopoulos et al., HPL 4 e34 (2016)"
+
+yb_yag_generic:
+  facility: "Generic Yb:YAG DPSSL"
+  gain_medium: "Yb:YAG"
+  wavelength_um: 1.030
+  duration_fs: 100.0
+  a0_reference: 5.0
+  polarization: p
+  envelope: gaussian
+  rep_rate_hz: 10.0
+  citation: "n/a"
