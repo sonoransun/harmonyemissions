@@ -157,6 +157,11 @@ harmony scan configs/dpm_contrast_scan.yaml \
   harmonic focus** extension: platonic / structured-light / time-multiplexed
   architectures, coherent-superposition gain law, geometry primitives,
   config schema, and roadmap.
+- [`docs/combined_power.md`](docs/combined_power.md) — **combined emission
+  power across geometric configurations**: when to add more drivers
+  (coherent within-regime, gain ∝ N·F_geom) vs. more targets (incoherent
+  cross-regime, photons stack per keV band). Decision matrix + worked
+  examples. Pairs with [`examples/12_combined_power_geometries.ipynb`](examples/12_combined_power_geometries.ipynb).
 - [`docs/contrast.md`](docs/contrast.md) — DPM contrast (t_HDR) and
   prepulse → plasma scale length model.
 - [`docs/instrument.md`](docs/instrument.md) — XUV instrument response
@@ -185,6 +190,7 @@ examples/
   09 XUV instrument response                      ← Methods eqs. 1, 6
   10 Extreme-fields roadmap — Gemini → ELI-NP → SEL  ← Fig. 4
   11 Frequency-domain source comparison — every model on one axis
+  12 Combined emission power across geometric configurations  ← coherent within-regime + incoherent cross-regime
 ```
 
 ## Performance and parallelism

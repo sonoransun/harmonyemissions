@@ -573,6 +573,241 @@ def chf3d_gain_scaling() -> None:
     _save(fig, "chf3d_gain_scaling.png")
 
 
+# ---------------------------------------------------------------------------
+# docs/combined_power.md — illustrative figures for combined emission power
+# across geometric (within-regime, coherent) and facility-shot (cross-regime,
+# incoherent) configurations. Both figures are pure analytic projections —
+# the geometry bar matrix uses the closed-form gain ⟨|Σ_i exp(iφ_i)|²⟩ /
+# N (matched-total-energy convention), and the facility stack runs each
+# analytical model once and weights its spectrum by a representative
+# per-regime conversion efficiency from the literature.
+# ---------------------------------------------------------------------------
+
+# Representative absolute conversion efficiencies (per-shot, dimensionless,
+# nominal literature values). The notebook exposes these as overridable
+# knobs; the figure pins them for reproducibility.
+_DEFAULT_REGIME_ETAS = {
+    "surface_pipeline": 1.5e-3,   # plateau η for SHHG @ a₀≥10 (Timmis 2026)
+    "lewenstein":       3.0e-5,   # Ar gas HHG plateau, generic
+    "cwe":              1.0e-4,   # CWE typical
+    "betatron":         5.0e-5,   # photons / driver photon, LWFA betatron
+    "ics":              1.0e-9,   # Compton head-on, photons / electron
+    "bremsstrahlung":   2.0e-4,   # hot-electron continuum, integrated
+    "kalpha":           1.0e-5,   # Kα fluorescence yield
+}
+
+# Bands the integrated-yield bar chart partitions. eV.
+_PHOTON_BANDS = [
+    ("XUV",       1.0,    1.0e3),
+    ("soft X",    1.0e3,  1.0e4),
+    ("hard X",    1.0e4,  1.0e5),
+    ("γ",         1.0e5,  1.0e7),
+]
+
+
+def combined_power_geometry_bars() -> None:
+    """Heatmap: projected coherent gain Γ / Γ_2D² across geometry × phase quality.
+
+    Matched-total-energy convention so the comparison is honest under a
+    fixed laser-energy budget. Closed-form gain
+    ⟨gain⟩ = N·exp(-σ²) + (1 - exp(-σ²)). Geometry and σ are independent
+    knobs the experimenter sets at the array level.
+    """
+    geometries = [
+        ("Tetrahedral",  4),
+        ("Cubic",        6),
+        ("Octahedral",   8),
+        ("Dodecahedral", 12),
+        ("Icosahedral",  20),
+    ]
+    sigmas = [0.0, np.pi / 8, np.pi / 4, np.pi / 2]
+    sigma_labels = ["σ = 0", "σ = π/8", "σ = π/4", "σ = π/2"]
+
+    grid = np.empty((len(geometries), len(sigmas)), dtype=float)
+    for i, (_, n) in enumerate(geometries):
+        for j, sigma in enumerate(sigmas):
+            coh = float(np.exp(-sigma ** 2))
+            grid[i, j] = n * coh + (1.0 - coh)
+
+    fig, (ax_h, ax_b) = plt.subplots(
+        1, 2, figsize=(11.5, 4.2), gridspec_kw={"width_ratios": [1.05, 1.0]},
+    )
+
+    # Left panel: heatmap.
+    im = ax_h.imshow(grid, aspect="auto", cmap="viridis",
+                     vmin=1.0, vmax=20.0)
+    ax_h.set_xticks(range(len(sigmas))); ax_h.set_xticklabels(sigma_labels)
+    ax_h.set_yticks(range(len(geometries)))
+    ax_h.set_yticklabels([f"{lbl} (N={n})" for lbl, n in geometries])
+    ax_h.set_xlabel("phase-locking quality σ [rad RMS]")
+    ax_h.set_title("Matched-total-energy gain  Γ_3D_coherent / Γ_2D²")
+    for i in range(len(geometries)):
+        for j in range(len(sigmas)):
+            val = grid[i, j]
+            colour = "white" if val < 12.0 else "black"
+            ax_h.text(j, i, f"{val:.1f}×", ha="center", va="center",
+                      fontsize=9, color=colour)
+    cbar = fig.colorbar(im, ax=ax_h, fraction=0.04, pad=0.02)
+    cbar.set_label("gain factor over single-beam Γ_2D²")
+
+    # Right panel: grouped bars (each geometry as a coloured group).
+    bar_w = 0.16
+    x_centres = np.arange(len(sigmas))
+    cmap = plt.get_cmap("plasma")
+    for i, (label, n) in enumerate(geometries):
+        offset = (i - (len(geometries) - 1) / 2.0) * bar_w
+        ax_b.bar(x_centres + offset, grid[i], width=bar_w,
+                 label=f"{label} N={n}",
+                 color=cmap(i / max(1, len(geometries) - 1)),
+                 edgecolor="0.2", linewidth=0.4)
+    ax_b.set_xticks(x_centres); ax_b.set_xticklabels(sigma_labels)
+    ax_b.axhline(1.0, color="k", ls=":", lw=0.8, alpha=0.6, label="single-beam")
+    ax_b.set_ylabel("Γ_3D_coherent / Γ_2D²")
+    ax_b.set_xlabel("phase-locking quality σ [rad RMS]")
+    ax_b.set_title("Same data — grouped per geometry")
+    ax_b.legend(fontsize=7.5, loc="upper right")
+    ax_b.grid(True, axis="y", alpha=0.25)
+
+    fig.suptitle(
+        "Combined coherent gain across platonic geometries × phase-locking quality",
+        fontsize=11,
+    )
+    fig.tight_layout()
+    _save(fig, "combined_power_geometry_bars.png")
+
+
+def combined_power_facility_stack() -> None:
+    """Stacked-area plot: photon flux per keV bin from a multi-target facility shot.
+
+    Defines a representative facility configuration that fires several
+    targets simultaneously: 4 surface-HHG drivers (matched-energy, treated
+    incoherently here for honest yield bookkeeping), 1 gas HHG jet, 1 LWFA
+    betatron, 1 hot-electron bremsstrahlung target, and 1 Kα target.
+    Each `Result.spectrum` is normalised to its own peak then weighted by a
+    representative absolute conversion efficiency, then interpolated onto
+    a common log-spaced energy axis and stacked.
+    """
+    facility = [
+        # (label, simulate_fn, count, regime_key, target_band_label)
+        ("4× surface_pipeline (a₀=24)",
+         lambda: simulate(Laser(a0=24.0, spot_fwhm_um=2.0, super_gaussian_order=8),
+                          Target.sio2(t_HDR_fs=351.0,
+                                       prepulse_intensity_rel=1e-3,
+                                       prepulse_delay_fs=100.0),
+                          model="surface_pipeline"),
+         4, "surface_pipeline"),
+        ("1× lewenstein (Ar)",
+         lambda: simulate(Laser(a0=0.05, wavelength_um=0.8),
+                          Target.gas(species="Ar"),
+                          model="lewenstein"),
+         1, "lewenstein"),
+        ("1× betatron (1 GeV)",
+         lambda: simulate(Laser(a0=2.0),
+                          Target.underdense(0.001, electron_energy_mev=1000.0),
+                          model="betatron"),
+         1, "betatron"),
+        ("1× bremsstrahlung",
+         lambda: simulate(Laser(a0=5.0),
+                          Target.overdense(100.0, 0.05),
+                          model="bremsstrahlung"),
+         1, "bremsstrahlung"),
+        ("1× Kα (Cu)",
+         lambda: simulate(Laser(a0=5.0),
+                          Target.overdense(100.0, 0.05, material="Cu"),
+                          model="kalpha"),
+         1, "kalpha"),
+    ]
+
+    # Common log-spaced energy axis: 1 eV → 10 MeV.
+    E_common_eV = np.geomspace(1.0, 1.0e7, 800)
+
+    contributions = []
+    for label, runfn, count, regime in facility:
+        r = runfn()
+        E_keV, S = _spectrum_energy_keV(r)
+        E_eV = E_keV * 1e3
+        mask = (E_eV > 0) & (S > 0)
+        if not np.any(mask):
+            contributions.append((label, np.zeros_like(E_common_eV)))
+            continue
+        # Normalise each spectrum to its own peak, then apply per-shot
+        # efficiency weight × number of targets (incoherent sum).
+        S_norm = S[mask] / S[mask].max()
+        eta = _DEFAULT_REGIME_ETAS.get(regime, 1.0e-5)
+        flux = count * eta * S_norm
+        # Log-space linear interpolation onto the common axis (in log-log,
+        # which is the right thing to do for power-law-ish spectra).
+        logE_src = np.log(E_eV[mask])
+        logF_src = np.log(np.maximum(flux, 1e-30))
+        logF_common = np.interp(np.log(E_common_eV), logE_src, logF_src,
+                                left=-np.inf, right=-np.inf)
+        F_common = np.exp(logF_common)
+        F_common[~np.isfinite(F_common)] = 0.0
+        contributions.append((label, F_common))
+
+    fig, (ax_stack, ax_bands) = plt.subplots(
+        1, 2, figsize=(13.5, 4.5), gridspec_kw={"width_ratios": [2.0, 1.0]},
+    )
+
+    # Stacked-area plot. Sort by integrated-yield ascending so the smallest
+    # contributors sit on the bottom and the bulk source dominates the top.
+    contributions.sort(key=lambda lf: np.trapezoid(lf[1], E_common_eV))
+    labels = [lf[0] for lf in contributions]
+    fluxes = np.array([lf[1] for lf in contributions])
+    # Replace zeros with a tiny floor so the log-y stacked area renders.
+    floor = 1e-12
+    fluxes = np.where(fluxes > 0, fluxes, floor)
+    cmap = plt.get_cmap("Set2")
+    colours = [cmap(i / max(1, len(labels) - 1)) for i in range(len(labels))]
+    ax_stack.stackplot(E_common_eV, fluxes, labels=labels, colors=colours,
+                       alpha=0.85, edgecolor="0.2", linewidth=0.3)
+    ax_stack.set_xscale("log"); ax_stack.set_yscale("log")
+    ax_stack.set_xlim(1.0, 1.0e7)
+    ax_stack.set_ylim(1e-12, max(1e-2, fluxes.sum(axis=0).max() * 2))
+    # Band annotations.
+    for label, lo, hi in _PHOTON_BANDS:
+        ax_stack.axvspan(lo, hi, color="0.92", alpha=0.35, zorder=0)
+        ax_stack.text(np.sqrt(lo * hi), ax_stack.get_ylim()[1] * 0.4,
+                      label, fontsize=9, ha="center", color="0.3",
+                      alpha=0.9)
+    ax_stack.set_xlabel("photon energy [eV]")
+    ax_stack.set_ylabel("photon flux per source [arb., absolute weights applied]")
+    ax_stack.set_title("Multi-target facility shot — incoherent stack across regimes")
+    ax_stack.legend(fontsize=8, loc="lower left")
+    ax_stack.grid(True, which="both", alpha=0.2)
+
+    # Right panel: integrated yield per band.
+    band_names = [b[0] for b in _PHOTON_BANDS]
+    integrated = np.zeros((len(contributions), len(_PHOTON_BANDS)), dtype=float)
+    for i, (_, F_common) in enumerate(contributions):
+        for j, (_, lo, hi) in enumerate(_PHOTON_BANDS):
+            mask = (E_common_eV >= lo) & (E_common_eV <= hi)
+            if mask.sum() > 1:
+                integrated[i, j] = float(np.trapezoid(
+                    F_common[mask], E_common_eV[mask],
+                ))
+    bar_w = 0.7
+    bottoms = np.zeros(len(_PHOTON_BANDS))
+    x = np.arange(len(_PHOTON_BANDS))
+    for i, label in enumerate(labels):
+        ax_bands.bar(x, integrated[i], bottom=bottoms, width=bar_w,
+                     color=colours[i], edgecolor="0.2", linewidth=0.4,
+                     label=label)
+        bottoms = bottoms + integrated[i]
+    ax_bands.set_xticks(x); ax_bands.set_xticklabels(band_names)
+    ax_bands.set_yscale("log")
+    ax_bands.set_ylabel("integrated yield in band  [arb.]")
+    ax_bands.set_title("Where the photons land")
+    ax_bands.grid(True, axis="y", alpha=0.25)
+
+    fig.suptitle(
+        "Cross-regime incoherent stacking — combined photon flux at a multi-target facility",
+        fontsize=11,
+    )
+    fig.tight_layout()
+    _save(fig, "combined_power_facility_stack.png")
+
+
 FIGURES = [
     hero_and_pipeline_panels,
     bgp_slope_figure,
@@ -596,6 +831,11 @@ FIGURES = [
     # this script should import platonic_directions from there instead.
     chf3d_geometries,
     chf3d_gain_scaling,
+    # docs/combined_power.md — within-regime coherent + cross-regime
+    # incoherent demonstrations of how emission power adds when multiple
+    # sources combine.
+    combined_power_geometry_bars,
+    combined_power_facility_stack,
 ]
 
 

@@ -5,6 +5,13 @@
 > docs polish, iterative phase optimiser) are still in flight. The full
 > implementation roadmap lives in
 > [`/root/.claude/plans/explore-3d-implications-of-vast-firefly.md`](../../.claude/plans/explore-3d-implications-of-vast-firefly.md).
+>
+> **Want to project current single-beam runs forward to a multi-beam
+> geometry without waiting for Phase C?** The closed-form gain laws below
+> already give you the answer — see
+> [`docs/combined_power.md`](combined_power.md) for the runnable
+> projection across geometries and phase-locking quality, paired with
+> [`examples/12_combined_power_geometries.ipynb`](../examples/12_combined_power_geometries.ipynb).
 
 ## Why 3-D
 

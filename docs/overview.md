@@ -44,6 +44,39 @@ saving, and parameter sweeps are regime-agnostic.
 *Every source on one normalised photon-energy axis, matched-driver
 conditions. Full overlay set in [`docs/comparison.md`](comparison.md).*
 
+## Combining sources
+
+Two routes to "more photons", both supported by the existing tooling and
+both fully documented in [`docs/combined_power.md`](combined_power.md):
+
+- **Coherent within a regime** — N phase-locked drivers in a 3-D platonic
+  geometry combine at one focal point. Closed-form matched-energy gain
+  ⟨gain⟩ ≈ N · e^{−σ²} + (1 − e^{−σ²}); icosahedral N=20 buys 20× peak
+  intensity at perfect locking, ~3× at σ = π/2. Geometry sets the
+  ceiling, phase-locking quality sets how close you get.
+- **Incoherent across regimes** — a multi-target facility shot stacks
+  surface_pipeline + lewenstein + betatron + bremsstrahlung + Kα
+  contributions per keV bin. The library has every primitive
+  (`Result.spectrum.coords['photon_energy_keV']`); the notebook
+  multiplies by per-regime conversion efficiencies and interpolates onto
+  a common log-spaced axis.
+
+![Coherent gain by geometry × phase-locking](images/combined_power_geometry_bars.png)
+
+*Matched-total-energy gain factor over single-beam Γ_2D² for the five
+platonic geometries × four phase-locking RMS levels. Same data as a
+heatmap (left) and grouped bars (right).*
+
+![Incoherent cross-regime stack](images/combined_power_facility_stack.png)
+
+*Multi-target facility shot — 4× surface_pipeline + 1× gas HHG + 1× LWFA
+betatron + 1× Cu-Kα + 1× hot-electron bremsstrahlung. Photons add
+incoherently per keV bin; the right panel shows where each source's
+yield concentrates (XUV / soft-X / hard-X / γ).*
+
+The runnable counterpart is
+[`examples/12_combined_power_geometries.ipynb`](../examples/12_combined_power_geometries.ipynb).
+
 ## Architecture
 
 ```mermaid
@@ -218,6 +251,9 @@ that breaks paper-fidelity is caught at CI time.
 - [`docs/chf.md`](chf.md) — single-beam CHF pipeline walkthrough.
 - [`docs/chf3d.md`](chf3d.md) — in-progress 3-D N-beam coherent harmonic
   focus extension (platonic / structured-light / time-multiplexed).
+- [`docs/combined_power.md`](combined_power.md) — combined emission power
+  across geometries (coherent within-regime) and facility shots
+  (incoherent cross-regime), with decision matrix.
 - [`docs/comparison.md`](comparison.md) — every source on one axis with
   decision matrix.
 - [`docs/cli.md`](cli.md) — full CLI reference.
