@@ -144,11 +144,19 @@ harmony scan configs/dpm_contrast_scan.yaml \
 
 ## Documentation
 
+- [`docs/overview.md`](docs/overview.md) — whole-project tour: capability
+  matrix across every regime, Mermaid architecture diagrams, the unified
+  `Result` schema, acceleration tiers, and where the in-progress 3-D
+  extension fits.
 - [`docs/theory.md`](docs/theory.md) — physics derivations and scaling
   laws for every regime, including the CHF pipeline (Timmis 2026
   Methods eqs. 7–12).
 - [`docs/chf.md`](docs/chf.md) — walkthrough of the Coherent Harmonic
   Focus module, its pipeline stages, and the a₀³ scaling law.
+- [`docs/chf3d.md`](docs/chf3d.md) — **in-progress 3-D N-beam coherent
+  harmonic focus** extension: platonic / structured-light / time-multiplexed
+  architectures, coherent-superposition gain law, geometry primitives,
+  config schema, and roadmap.
 - [`docs/contrast.md`](docs/contrast.md) — DPM contrast (t_HDR) and
   prepulse → plasma scale length model.
 - [`docs/instrument.md`](docs/instrument.md) — XUV instrument response

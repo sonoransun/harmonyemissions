@@ -412,6 +412,167 @@ def sweep_kalpha_materials() -> None:
     _save(fig, "sweep_kalpha_materials.png")
 
 
+def _platonic_face_directions(name: str) -> np.ndarray:
+    """Inward-pointing unit vectors at the face centres of a regular solid.
+
+    Hardcoded here so docs/chf3d.md figures can be rendered even before
+    src/harmonyemissions/chf/geometry.py lands (Phase C). When it lands,
+    swap to `from harmonyemissions.chf.geometry import platonic_directions`.
+    """
+    if name == "tetrahedron":
+        # Vertex coordinates; faces of a regular tetrahedron sit opposite
+        # vertices, so the face-direction vector is −vertex / |vertex|.
+        v = np.array([
+            [1, 1, 1], [1, -1, -1], [-1, 1, -1], [-1, -1, 1],
+        ], dtype=float)
+        d = -v / np.linalg.norm(v, axis=1, keepdims=True)
+        return d
+    if name == "octahedron":
+        # 8 face centres = ±(1,1,1)/√3 with all sign permutations.
+        d = np.array([
+            [s1, s2, s3]
+            for s1 in (-1, 1) for s2 in (-1, 1) for s3 in (-1, 1)
+        ], dtype=float)
+        return d / np.linalg.norm(d, axis=1, keepdims=True)
+    if name == "dodecahedron":
+        # 12 face centres = vertex set of an icosahedron (dual relationship).
+        phi = (1 + 5 ** 0.5) / 2
+        v = []
+        for s1 in (-1, 1):
+            for s2 in (-1, 1):
+                v.append((0.0, s1, s2 * phi))
+                v.append((s1, s2 * phi, 0.0))
+                v.append((s2 * phi, 0.0, s1))
+        d = np.array(v, dtype=float)
+        return d / np.linalg.norm(d, axis=1, keepdims=True)
+    if name == "icosahedron":
+        # 20 face centres = vertex set of a dodecahedron (dual relationship).
+        phi = (1 + 5 ** 0.5) / 2
+        inv = 1.0 / phi
+        v = []
+        for s1 in (-1, 1):
+            for s2 in (-1, 1):
+                for s3 in (-1, 1):
+                    v.append((s1, s2, s3))
+        for s1 in (-1, 1):
+            for s2 in (-1, 1):
+                v.append((0.0, s1 * inv, s2 * phi))
+                v.append((s1 * inv, s2 * phi, 0.0))
+                v.append((s2 * phi, 0.0, s1 * inv))
+        d = np.array(v, dtype=float)
+        return d / np.linalg.norm(d, axis=1, keepdims=True)
+    raise ValueError(f"unknown platonic name {name!r}")
+
+
+def chf3d_geometries() -> None:
+    """Five-panel: inward-pointing driver direction vectors for platonic arrays.
+
+    Each panel shows N drivers (arrows) converging on the central focal point.
+    Used by docs/chf3d.md to ground the geometric intuition before the physics
+    kernel lands.
+    """
+    from mpl_toolkits.mplot3d import Axes3D  # noqa: F401  (registers '3d' projection)
+
+    geometries = [
+        ("Tetrahedral",  "tetrahedron",  4),
+        ("Octahedral",   "octahedron",   8),
+        ("Dodecahedral", "dodecahedron", 12),
+        ("Icosahedral",  "icosahedron",  20),
+    ]
+    fig = plt.figure(figsize=(13, 3.5))
+    for idx, (label, name, n) in enumerate(geometries, start=1):
+        ax = fig.add_subplot(1, 4, idx, projection="3d")
+        d = _platonic_face_directions(name)            # (N, 3) inward unit vectors
+        origins = -d * 1.0                             # source 1 unit away from focus
+        # Driver arrows: origin → focus.
+        ax.quiver(
+            origins[:, 0], origins[:, 1], origins[:, 2],
+            d[:, 0], d[:, 1], d[:, 2],
+            length=1.0, arrow_length_ratio=0.18,
+            color="C0", linewidth=1.0, alpha=0.85,
+        )
+        # Source dots.
+        ax.scatter(origins[:, 0], origins[:, 1], origins[:, 2],
+                   color="C0", s=18, depthshade=True)
+        # Focal point.
+        ax.scatter([0], [0], [0], color="crimson", s=40, marker="*",
+                   label="focus")
+        ax.set_xlim(-1.2, 1.2)
+        ax.set_ylim(-1.2, 1.2)
+        ax.set_zlim(-1.2, 1.2)
+        ax.set_box_aspect((1, 1, 1))
+        ax.set_title(f"{label} — N = {n}", fontsize=10)
+        ax.set_xticks([]); ax.set_yticks([]); ax.set_zticks([])
+        ax.grid(False)
+    fig.suptitle(
+        "Platonic-solid driver geometries — inward unit vectors n̂_i converge on focus",
+        fontsize=11, y=1.02,
+    )
+    fig.tight_layout()
+    _save(fig, "chf3d_geometries.png")
+
+
+def chf3d_gain_scaling() -> None:
+    """Analytic Γ_3D_coherent / Γ_2D² vs N for several phase-RMS jitter levels.
+
+    Closed form: ⟨|Σ_i exp(iφ_i)|²⟩ ≈ N²·exp(-σ²) + N·(1 - exp(-σ²)),
+    so the gain interpolates between fully coherent (N²·Γ_2D²) and fully
+    incoherent (N·Γ_2D²) as the phase-jitter σ rises from 0 to ∞. The
+    matched-energy convention scales each beam's amplitude by 1/√N so total
+    laser energy is fixed regardless of N.
+    """
+    fig, axes = plt.subplots(1, 2, figsize=(11.5, 4.2))
+
+    n_grid = np.arange(1, 41)
+    sigmas = [0.0, np.pi / 8, np.pi / 4, np.pi / 2, np.pi]
+    sigma_labels = ["σ = 0 (locked)", "σ = π/8", "σ = π/4",
+                    "σ = π/2", "σ = π (random)"]
+
+    # Left panel: fixed per-beam amplitude (energy scales with N).
+    ax = axes[0]
+    for sigma, label in zip(sigmas, sigma_labels, strict=True):
+        coh = np.exp(-sigma ** 2)
+        gain = n_grid ** 2 * coh + n_grid * (1.0 - coh)
+        ax.plot(n_grid, gain, lw=1.5, label=label)
+    ax.plot(n_grid, n_grid ** 2, "k--", lw=0.8, alpha=0.5, label="N² (upper bound)")
+    ax.plot(n_grid, n_grid, "k:", lw=0.8, alpha=0.5, label="N (incoherent)")
+    # Mark the platonic Ns.
+    for N, name in [(4, "tetra"), (8, "octa"), (12, "dodec"), (20, "icos")]:
+        ax.axvline(N, color="0.7", lw=0.5, ls=":")
+        ax.text(N, 1.1, name, fontsize=7, ha="center", color="0.4")
+    ax.set_xlabel("number of drivers N")
+    ax.set_ylabel("Γ_3D_coherent / Γ_2D²")
+    ax.set_yscale("log")
+    ax.set_title("Per-beam energy fixed — total energy ∝ N")
+    ax.grid(True, which="both", alpha=0.25)
+    ax.legend(fontsize=8, loc="upper left")
+
+    # Right panel: matched total energy (per-beam amplitude ∝ 1/√N).
+    ax = axes[1]
+    for sigma, label in zip(sigmas, sigma_labels, strict=True):
+        coh = np.exp(-sigma ** 2)
+        # Each beam's far-field amplitude scaled by 1/√N → effective gain
+        # = (1/N) * [N²·coh + N·(1-coh)] = N·coh + (1-coh).
+        gain = n_grid * coh + (1.0 - coh)
+        ax.plot(n_grid, gain, lw=1.5, label=label)
+    ax.plot(n_grid, n_grid, "k--", lw=0.8, alpha=0.5, label="N (matched-energy bound)")
+    ax.axhline(1.0, color="k", ls=":", lw=0.8, alpha=0.5, label="single-beam ref")
+    for N, name in [(4, "tetra"), (8, "octa"), (12, "dodec"), (20, "icos")]:
+        ax.axvline(N, color="0.7", lw=0.5, ls=":")
+    ax.set_xlabel("number of drivers N")
+    ax.set_ylabel("Γ_3D_coherent / Γ_2D² (matched energy)")
+    ax.set_title("Matched total laser energy — per-beam a₀ scaled by 1/√N")
+    ax.grid(True, which="both", alpha=0.25)
+    ax.legend(fontsize=8, loc="upper left")
+
+    fig.suptitle(
+        "Coherent-superposition gain Γ_3D_coherent vs phase-locking quality",
+        fontsize=11,
+    )
+    fig.tight_layout()
+    _save(fig, "chf3d_gain_scaling.png")
+
+
 FIGURES = [
     hero_and_pipeline_panels,
     bgp_slope_figure,
@@ -429,6 +590,12 @@ FIGURES = [
     sweep_a0_surface,
     sweep_gamma_betatron_ics,
     sweep_kalpha_materials,
+    # 3-D coherent harmonic focus (chf3d) — illustrative figures used by
+    # docs/chf3d.md. Coordinates are hardcoded here so the figure can be
+    # regenerated even before chf/geometry.py (Phase C) lands; once it does,
+    # this script should import platonic_directions from there instead.
+    chf3d_geometries,
+    chf3d_gain_scaling,
 ]
 
 

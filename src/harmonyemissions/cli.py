@@ -124,6 +124,15 @@ def validate(
     """Schema-check a config file without running a simulation."""
     cfg = load_config(config)
     typer.echo(f"OK — {cfg.model} on {cfg.target.kind} via {cfg.backend}")
+    if cfg.laser_array is not None:
+        n = cfg.laser_array.effective_n_beams()
+        typer.echo(
+            f"  laser_array: geometry={cfg.laser_array.geometry} "
+            f"placement={cfg.laser_array.placement} n_beams={n} "
+            f"polarization={cfg.laser_array.polarization_mode}"
+            + (f" structured_mode={cfg.laser_array.structured_mode}"
+               if cfg.laser_array.structured_mode else "")
+        )
 
 
 @app.command("list-presets")

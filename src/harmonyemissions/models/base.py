@@ -50,6 +50,10 @@ class Result:
     chf_gain: dict[str, float] = field(default_factory=dict)
     # Post-processed, detector-corrected spectrum (if the instrument pipeline ran).
     instrument_spectrum: xr.DataArray | None = None
+    # 3-D coherent-focus (chf3d) outputs — populated only when laser_array is set.
+    chf_focal_volume: xr.DataArray | None = None      # (harmonic_diag, x, y, z) intensity
+    per_beam_far_field: xr.DataArray | None = None    # (beam_index, harmonic_diag, yi, xi)
+    beam_array_geometry: dict[str, Any] | None = None  # JSON-round-trippable geometry record
     diagnostics: dict[str, float] = field(default_factory=dict)
     provenance: dict[str, Any] = field(default_factory=dict)
 
@@ -102,6 +106,8 @@ class Result:
             "beam_profile_near",
             "beam_profile_far",
             "instrument_spectrum",
+            "chf_focal_volume",
+            "per_beam_far_field",
         ):
             val = getattr(self, key)
             if val is not None:
@@ -110,6 +116,8 @@ class Result:
         ds.attrs["diagnostics_json"] = _dumps(self.diagnostics)
         ds.attrs["provenance_json"] = _dumps(self.provenance)
         ds.attrs["chf_gain_json"] = _dumps(self.chf_gain)
+        if self.beam_array_geometry is not None:
+            ds.attrs["beam_array_geometry_json"] = _dumps(self.beam_array_geometry)
         return ds
 
     def save(self, path: str | Path) -> Path:
@@ -125,6 +133,7 @@ class Result:
         def take(name: str) -> xr.DataArray | None:
             return ds[name] if name in ds else None
 
+        geom_json = ds.attrs.get("beam_array_geometry_json")
         return cls(
             spectrum=ds["spectrum"],
             time_field=take("time_field"),
@@ -133,6 +142,9 @@ class Result:
             beam_profile_near=take("beam_profile_near"),
             beam_profile_far=take("beam_profile_far"),
             instrument_spectrum=take("instrument_spectrum"),
+            chf_focal_volume=take("chf_focal_volume"),
+            per_beam_far_field=take("per_beam_far_field"),
+            beam_array_geometry=_loads(geom_json) if geom_json else None,
             chf_gain=_loads(ds.attrs.get("chf_gain_json", "{}")),
             diagnostics=_loads(ds.attrs.get("diagnostics_json", "{}")),
             provenance=_loads(ds.attrs.get("provenance_json", "{}")),

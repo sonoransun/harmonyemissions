@@ -57,6 +57,13 @@ def simulate(
 
 def simulate_from_config(config: RunConfig) -> Result:
     """Convenience: run a simulation described by a :class:`RunConfig`."""
+    if config.laser_array is not None:
+        raise NotImplementedError(
+            "laser_array (3-D multi-beam coherent harmonic focus) is parsed and "
+            "validated, but the runtime pipeline lands in Phase C. Run the "
+            "single-beam pipeline by removing the 'laser_array' block from your "
+            "config, or wait for the chf3d release."
+        )
     return simulate(
         laser=config.laser.build(),
         target=config.target.build(),
