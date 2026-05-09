@@ -203,6 +203,25 @@ class LaserArrayConfig(BaseModel):
         return self
 
 
+class ExtremePowerConfig(BaseModel):
+    """Heterogeneous-beam, RR + perturbative-QED overlay on chf3d.
+
+    Sits next to ``laser_array`` and only takes effect when the multi-beam
+    pipeline runs. Off by default; ``per_beam_lasers`` defaulting to
+    ``None`` means the homogeneous Phase C path is taken even with this
+    block present.
+    """
+
+    per_beam_lasers: list[LaserConfig] | None = None
+    enable_radiation_reaction: bool = False
+    enable_qed: bool = False
+    rr_a0_floor: float = Field(50.0, gt=0.0)
+    rr_clip_chi: float = Field(2.0, gt=0.0)
+    qed_chi_warn: float = Field(0.5, gt=0.0)
+    omega_grid_points: int = Field(4096, gt=8)
+    omega_grid_pad: float = Field(1.05, gt=1.0)
+
+
 class RunConfig(BaseModel):
     model: Literal[
         "rom", "bgp", "cse", "lewenstein", "betatron", "surface_pipeline", "cwe",
@@ -213,6 +232,7 @@ class RunConfig(BaseModel):
     target: TargetConfig
     numerics: NumericsConfig = Field(default_factory=NumericsConfig)
     laser_array: LaserArrayConfig | None = None
+    extreme_power: ExtremePowerConfig | None = None
     output: str | None = None
     extra: dict[str, Any] = Field(default_factory=dict)
 
@@ -240,6 +260,24 @@ class RunConfig(BaseModel):
                 f"laser_array is currently only supported with model='surface_pipeline'; "
                 f"got model={self.model!r}"
             )
+        if self.extreme_power is not None:
+            if self.laser_array is None:
+                raise ValueError(
+                    "extreme_power requires laser_array (multi-beam geometry must be set)"
+                )
+            if self.model != "surface_pipeline":
+                raise ValueError(
+                    f"extreme_power is currently only supported with model='surface_pipeline'; "
+                    f"got model={self.model!r}"
+                )
+            ep = self.extreme_power
+            if ep.per_beam_lasers is not None:
+                expected = self.laser_array.effective_n_beams()
+                if len(ep.per_beam_lasers) != expected:
+                    raise ValueError(
+                        f"extreme_power.per_beam_lasers length "
+                        f"{len(ep.per_beam_lasers)} != laser_array.n_beams {expected}"
+                    )
         return self
 
 

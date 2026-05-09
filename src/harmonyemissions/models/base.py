@@ -54,6 +54,9 @@ class Result:
     chf_focal_volume: xr.DataArray | None = None      # (harmonic_diag, x, y, z) intensity
     per_beam_far_field: xr.DataArray | None = None    # (beam_index, harmonic_diag, yi, xi)
     beam_array_geometry: dict[str, Any] | None = None  # JSON-round-trippable geometry record
+    # Extreme-Power overlay outputs (populated when extreme_power is set):
+    qed_diagnostics: dict[str, Any] = field(default_factory=dict)
+    radiation_reaction: dict[str, Any] = field(default_factory=dict)
     diagnostics: dict[str, float] = field(default_factory=dict)
     provenance: dict[str, Any] = field(default_factory=dict)
 
@@ -118,6 +121,10 @@ class Result:
         ds.attrs["chf_gain_json"] = _dumps(self.chf_gain)
         if self.beam_array_geometry is not None:
             ds.attrs["beam_array_geometry_json"] = _dumps(self.beam_array_geometry)
+        if self.qed_diagnostics:
+            ds.attrs["qed_diagnostics_json"] = _dumps(self.qed_diagnostics)
+        if self.radiation_reaction:
+            ds.attrs["radiation_reaction_json"] = _dumps(self.radiation_reaction)
         return ds
 
     def save(self, path: str | Path) -> Path:
@@ -134,6 +141,8 @@ class Result:
             return ds[name] if name in ds else None
 
         geom_json = ds.attrs.get("beam_array_geometry_json")
+        qed_json = ds.attrs.get("qed_diagnostics_json")
+        rr_json = ds.attrs.get("radiation_reaction_json")
         return cls(
             spectrum=ds["spectrum"],
             time_field=take("time_field"),
@@ -145,6 +154,8 @@ class Result:
             chf_focal_volume=take("chf_focal_volume"),
             per_beam_far_field=take("per_beam_far_field"),
             beam_array_geometry=_loads(geom_json) if geom_json else None,
+            qed_diagnostics=_loads(qed_json) if qed_json else {},
+            radiation_reaction=_loads(rr_json) if rr_json else {},
             chf_gain=_loads(ds.attrs.get("chf_gain_json", "{}")),
             diagnostics=_loads(ds.attrs.get("diagnostics_json", "{}")),
             provenance=_loads(ds.attrs.get("provenance_json", "{}")),

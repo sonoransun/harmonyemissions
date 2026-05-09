@@ -45,6 +45,8 @@ flowchart LR
 | Hot-electron bremsstrahlung (keV continuum)       | `bremsstrahlung`     | dI/dE ∝ E₁(E/T_hot), Wilks   |
 | Kα fluorescence on solid targets                  | `kalpha`             | ω_K · σ_K(T_hot), material-pinned |
 | Inverse Compton Scattering / γ-rays               | `ics`                | E_γ = 4γ²ħω₀ / (1 + 4γE_L/m_ec²) |
+| chf3d coherent multi-beam (Phase C)               | `surface_pipeline` + `laser_array:` | Γ_3D_coherent ≈ N²·Γ_2D²·F_geom |
+| Extreme-Power (heterogeneous + RR + QED)          | `surface_pipeline` + `laser_array:` + `extreme_power:` | χ, Δφ_birefringence, BW pair rate; LL cutoff derate |
 
 ## DPSSL quickstart (Yb:YAG 1030 nm drivers)
 

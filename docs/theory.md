@@ -197,7 +197,12 @@ CHF turns surface-HHG from a spectroscopy demonstration into a
 **field-intensity engineering** tool. The reflected harmonic beam is
 spatiotemporally compressed into a focus whose peak intensity exceeds
 the driver's by 10²–10⁴×, approaching the Schwinger limit (2.3 × 10²⁹
-W/cm²) for 50 PW-class laser systems.
+W/cm²) for 50 PW-class laser systems. Once that regime is in scope,
+the **Extreme-Power overlay** ([`docs/extreme_power.md`](extreme_power.md))
+adds Landau–Lifshitz radiation-reaction derate of the harmonic cutoff
+and perturbative QED diagnostics (Schwinger ratio, vacuum
+birefringence, Breit–Wheeler pair-production rate) at the post-CHF
+focal volume.
 
 ### Three ingredients
 

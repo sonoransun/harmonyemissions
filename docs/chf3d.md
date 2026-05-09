@@ -1,17 +1,19 @@
 # 3-D Coherent Harmonic Focus (chf3d)
 
-> **Status — in progress.** Phases A (schema + plumbing) and B (single-beam
-> refactor) are merged; Phase C (physics kernel) and Phase D (viz, notebook,
-> docs polish, iterative phase optimiser) are still in flight. The full
-> implementation roadmap lives in
-> [`/root/.claude/plans/explore-3d-implications-of-vast-firefly.md`](../../.claude/plans/explore-3d-implications-of-vast-firefly.md).
+> **Status — Phase C live.** Phases A (schema + plumbing), B (single-beam
+> refactor), and C (coherent multi-beam kernel) are merged. The
+> dispatcher in `models/surface_pipeline.py::SurfacePipelineModel.run`
+> branches into `_run_multi_beam` whenever `laser_array:` is set, and
+> the runner unblocks chf3d configs end-to-end.  Phase D (iterative
+> phase optimisers, additional viz helpers) is the remaining roadmap
+> item.
 >
-> **Want to project current single-beam runs forward to a multi-beam
-> geometry without waiting for Phase C?** The closed-form gain laws below
-> already give you the answer — see
-> [`docs/combined_power.md`](combined_power.md) for the runnable
-> projection across geometries and phase-locking quality, paired with
-> [`examples/12_combined_power_geometries.ipynb`](../examples/12_combined_power_geometries.ipynb).
+> **Heterogeneous beams + RR + perturbative QED diagnostics** sit on
+> top of Phase C as the **Extreme-Power overlay** — see
+> [`docs/extreme_power.md`](extreme_power.md). The chf3d kernel handles
+> homogeneous arrays; Extreme-Power layers in per-beam laser overrides,
+> Landau–Lifshitz radiation friction, and Schwinger / vacuum-birefringence
+> / Breit–Wheeler diagnostics.
 
 ## Why 3-D
 
@@ -276,8 +278,9 @@ Round-trip verification matrix:
 |---|---|---|
 | **A** | ✅ Done | `LaserArrayConfig` schema, `NumericsConfig` chf3d knobs, `Result` schema growth, `to_dataset` / `load` round-trip, runner gate, CLI `validate` extension. 22 new tests in `tests/test_laser_array.py`, 3 in `tests/test_io.py`, 325 total passing. |
 | **B** | ✅ Done | Pure refactor: extracted `_run_single_beam` from `models/surface_pipeline.py` (zero behavioural change). |
-| **C** | 🚧 In progress | New modules `chf/geometry.py`, `chf/superposition.py`, `chf/timing.py`. New `beam/modes.py` for structured-light. `LaserArrayConfig.build()` materialiser. Multi-beam dispatch in `surface_pipeline.run`. Configs `chf3d_dodecahedral.yaml`, `chf3d_icosahedral.yaml`, `chf3d_structured_vortex.yaml`. End-to-end multi-beam tests. |
-| **D** | ⏳ Planned | `viz.plot_focal_volume`, `viz.plot_beam_array`, per-beam phase residual bars, `harmony plot -k focal-volume`/`-k array`, `examples/12_chf3d.ipynb`, `scipy_lbfgs` / `gerchberg_saxton` iterative optimiser branches, `make images` regeneration. |
+| **C** | ✅ Done | New modules `chf/geometry.py`, `chf/superposition.py`, `chf/timing.py`, `chf/modes.py`. Multi-beam dispatch in `surface_pipeline.run` (`_run_multi_beam`). Configs `chf3d_dodecahedral.yaml`, `chf3d_icosahedral_sel.yaml`, `chf3d_structured_vortex.yaml`. End-to-end multi-beam tests in `tests/test_chf3d_phase_c.py`. Notebook `examples/13_chf3d_dodecahedral.ipynb`. |
+| **D** | ⏳ Planned | `viz.plot_focal_volume`, `viz.plot_beam_array`, per-beam phase residual bars, `harmony plot -k focal-volume`/`-k array`, `scipy_lbfgs` / `gerchberg_saxton` iterative optimiser branches, `make images` regeneration. |
+| **E** | ✅ Done (overlay) | Extreme-Power: heterogeneous beams + Landau–Lifshitz radiation friction + perturbative QED diagnostics. New module `qed.py`, dispatcher in `models/_extreme_power.py`. See [`docs/extreme_power.md`](extreme_power.md). |
 
 The full plan with file-by-file anchors is at
 [`/root/.claude/plans/explore-3d-implications-of-vast-firefly.md`](../../.claude/plans/explore-3d-implications-of-vast-firefly.md).

@@ -1,0 +1,43 @@
+# chf3d Phase C baseline for the Extreme-Power comparison: 12-driver
+# dodecahedral SEL-class array (a₀ = 130, 15 fs) with no extreme_power
+# block. Pair this with `extreme_power_combined.yaml` to see what RR +
+# QED diagnostics add on top of the homogeneous coherent kernel.
+model: surface_pipeline
+backend: analytical
+
+laser:
+  a0: 130.0
+  wavelength_um: 0.8
+  duration_fs: 15.0
+  polarization: p
+  envelope: gaussian
+  angle_deg: 0.0
+  spatial_profile: super_gaussian
+  spot_fwhm_um: 1.5
+  super_gaussian_order: 8
+
+target:
+  kind: overdense
+  material: SiO2
+  n_over_nc: 200.0
+  gradient_L_over_lambda: 0.10
+  reflectivity: 0.55
+  t_HDR_fs: 351.0
+  prepulse_intensity_rel: 1.0e-4
+  prepulse_delay_fs: 50.0
+
+laser_array:
+  geometry: dodecahedral
+  placement: faces
+  polarization_mode: uniform_p
+  per_beam_a0_scale:
+    [0.288, 0.288, 0.288, 0.288,
+     0.288, 0.288, 0.288, 0.288,
+     0.288, 0.288, 0.288, 0.288]
+
+numerics:
+  pipeline_grid: 64
+  pipeline_dx_um: 0.08
+  diag_harmonics: [1, 60, 150, 300]
+  chf_focal_volume_n: 12
+  chf_focal_volume_extent_um: 0.5

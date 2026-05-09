@@ -1,0 +1,64 @@
+# Extreme-Power overlay — 8-beam cubic geometry combining 4 SEL drivers
+# (λ = 800 nm, a₀ = 130) on the cube's +x/−x/+y/−y faces with 4 ELI-NP
+# drivers (λ = 820 nm, a₀ = 80) on the +z/−z faces (last 4 entries of
+# `per_beam_lasers`). Phase-locking and QED diagnostics on; Landau–Lifshitz
+# radiation reaction on (a₀ ≥ 80 is past the floor).
+model: surface_pipeline
+backend: analytical
+
+# Base laser used as the fall-back for any field absent from
+# per_beam_lasers; here it just supplies envelope, polarization, etc.
+laser:
+  a0: 130.0
+  wavelength_um: 0.8
+  duration_fs: 20.0
+  polarization: p
+  envelope: gaussian
+  angle_deg: 0.0
+  spatial_profile: super_gaussian
+  spot_fwhm_um: 1.5
+  super_gaussian_order: 8
+
+target:
+  kind: overdense
+  material: SiO2
+  n_over_nc: 200.0
+  gradient_L_over_lambda: 0.10
+  reflectivity: 0.55
+  t_HDR_fs: 351.0
+  prepulse_intensity_rel: 1.0e-4
+  prepulse_delay_fs: 50.0
+
+laser_array:
+  geometry: cubic
+  placement: vertices    # 8 cube vertices ⇒ 8 beams
+  polarization_mode: radial
+  per_beam_a0_scale:
+    [0.353, 0.353, 0.353, 0.353,    # 4 SEL drivers, ~1/√8
+     0.353, 0.353, 0.353, 0.353]    # 4 ELI-NP drivers
+
+extreme_power:
+  enable_radiation_reaction: true
+  enable_qed: true
+  rr_a0_floor: 50.0
+  rr_clip_chi: 2.0
+  qed_chi_warn: 0.5
+  omega_grid_points: 1024
+  omega_grid_pad: 1.05
+  per_beam_lasers:
+    - {a0: 130.0, wavelength_um: 0.80, duration_fs: 15.0, polarization: p, spot_fwhm_um: 1.5}
+    - {a0: 130.0, wavelength_um: 0.80, duration_fs: 15.0, polarization: p, spot_fwhm_um: 1.5}
+    - {a0: 130.0, wavelength_um: 0.80, duration_fs: 15.0, polarization: p, spot_fwhm_um: 1.5}
+    - {a0: 130.0, wavelength_um: 0.80, duration_fs: 15.0, polarization: p, spot_fwhm_um: 1.5}
+    - {a0:  80.0, wavelength_um: 0.82, duration_fs: 25.0, polarization: p, spot_fwhm_um: 2.0}
+    - {a0:  80.0, wavelength_um: 0.82, duration_fs: 25.0, polarization: p, spot_fwhm_um: 2.0}
+    - {a0:  80.0, wavelength_um: 0.82, duration_fs: 25.0, polarization: p, spot_fwhm_um: 2.0}
+    - {a0:  80.0, wavelength_um: 0.82, duration_fs: 25.0, polarization: p, spot_fwhm_um: 2.0}
+
+numerics:
+  pipeline_grid: 64
+  pipeline_dx_um: 0.08
+  diag_harmonics: [1, 30, 80, 150]
+  chf_focal_volume_n: 8
+  chf_focal_volume_extent_um: 0.5
+  chf_focal_volume_mode: volume

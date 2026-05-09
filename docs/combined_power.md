@@ -246,6 +246,12 @@ have your regime(s) chosen."
 
 - [`docs/chf3d.md`](chf3d.md) — the full chf3d feature: kernel design,
   geometry primitives, per-beam phase math, multi-beam pipeline.
+- [`docs/extreme_power.md`](extreme_power.md) — Extreme-Power overlay
+  on top of chf3d Phase C: heterogeneous beams (combine drivers from
+  different facilities), Landau–Lifshitz radiation-reaction derate at
+  a₀ ≳ 100, and perturbative QED diagnostics (χ, vacuum birefringence,
+  Breit–Wheeler pair rate). Use this when "more drivers" means combining
+  *different* facility lasers rather than N copies of the same.
 - [`docs/chf.md`](chf.md) — single-beam Coherent Harmonic Focus (the
   `Γ_2D²` baseline that everything else multiplies).
 - [`docs/comparison.md`](comparison.md) — every regime on one keV axis

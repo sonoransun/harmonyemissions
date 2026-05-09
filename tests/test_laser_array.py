@@ -218,9 +218,13 @@ def test_yaml_roundtrip_preserves_laser_array(tmp_path):
 
 def test_yaml_legacy_config_loads_with_laser_array_none():
     # Existing single-beam configs in configs/ should still load and have
-    # laser_array == None (back-compat invariant).
+    # laser_array == None (back-compat invariant). chf3d / extreme_power
+    # configs are intentionally excluded.
     root = Path(__file__).resolve().parents[1] / "configs"
+    multi_beam_prefixes = ("chf3d_", "chf_sel_array", "extreme_power_")
     for cfg_file in root.glob("*.yaml"):
+        if cfg_file.stem.startswith(multi_beam_prefixes):
+            continue
         cfg = load_config(cfg_file)
         assert cfg.laser_array is None, f"{cfg_file.name} unexpectedly grew laser_array"
 
@@ -260,16 +264,28 @@ def test_numerics_chf3d_yaml_roundtrip(tmp_path):
 # ---- runner gate ----------------------------------------------------------
 
 
-def test_runner_raises_until_phase_c(tmp_path):
+def test_runner_dispatches_phase_c(tmp_path):
+    """Phase C is now live — the runner must execute multi-beam configs."""
     from harmonyemissions.runner import simulate_from_config
 
     cfg_payload = _with_array({"geometry": "tetrahedral"})
-    cfg_path = tmp_path / "phaseA.yaml"
+    # Keep memory bounded: smaller transverse + focal-volume grids.
+    cfg_payload["numerics"] = {
+        "pipeline_grid": 32,
+        "chf_focal_volume_n": 4,
+        "chf_focal_volume_extent_um": 0.5,
+    }
+    cfg_path = tmp_path / "phase_c.yaml"
     cfg_path.write_text(yaml.safe_dump(cfg_payload))
     cfg = load_config(cfg_path)
 
-    with pytest.raises(NotImplementedError, match="Phase C"):
-        simulate_from_config(cfg)
+    result = simulate_from_config(cfg)
+    assert result.spectrum is not None
+    assert result.chf_focal_volume is not None
+    assert result.beam_array_geometry is not None
+    assert result.beam_array_geometry["n_beams"] == 4
+    assert "Gamma_3D_coherent" in result.chf_gain
+    assert "N_beams" in result.chf_gain
 
 
 def test_runner_works_for_legacy_single_beam():

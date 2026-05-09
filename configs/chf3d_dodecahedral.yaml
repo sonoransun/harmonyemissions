@@ -1,0 +1,50 @@
+# chf3d Phase C — 12-driver dodecahedral coherent harmonic focus on a
+# Gemini-class shot. The base laser matches `chf_gemini.yaml`; the
+# laser_array block fans 12 phase-locked drivers onto the dodecahedron's
+# face centres with radial polarization. Matched-energy per-beam scaling
+# (a0_i = a0/√N) keeps the *total* incident pulse energy at the
+# single-beam reference; the coherent gain comes from the 3-D voxel
+# accumulator, not from raw amplitude scaling.
+model: surface_pipeline
+backend: analytical
+
+laser:
+  a0: 24.0
+  wavelength_um: 0.8
+  duration_fs: 50.0
+  polarization: p
+  envelope: gaussian
+  angle_deg: 0.0
+  spatial_profile: super_gaussian
+  spot_fwhm_um: 2.0
+  super_gaussian_order: 8
+
+target:
+  kind: overdense
+  material: SiO2
+  n_over_nc: 200.0
+  gradient_L_over_lambda: 0.14
+  reflectivity: 0.6
+  t_HDR_fs: 351.0
+  prepulse_intensity_rel: 1.0e-3
+  prepulse_delay_fs: 100.0
+
+laser_array:
+  geometry: dodecahedral
+  placement: faces
+  polarization_mode: radial
+  per_beam_a0_scale:
+    [0.288, 0.288, 0.288, 0.288,
+     0.288, 0.288, 0.288, 0.288,
+     0.288, 0.288, 0.288, 0.288]   # ≈ 1/√12 (matched-energy)
+
+numerics:
+  n_periods: 30.0
+  samples_per_period: 512
+  pipeline_grid: 96
+  pipeline_dx_um: 0.10
+  diag_harmonics: [1, 12, 25, 47]
+  chf_focal_volume_n: 16
+  chf_focal_volume_extent_um: 0.8
+  chf_focal_volume_mode: volume
+  phase_optimiser: analytic

@@ -1,0 +1,43 @@
+# chf3d Phase C — minimal demo of a structured-light driver array. Four
+# tetrahedrally-arranged beams each carry an LG_01 (l=1, p=0) optical
+# vortex, so each driver has an on-axis amplitude null. The far-field
+# null is preserved through the coherent superposition (test pin in
+# tests/test_chf3d_phase_c.py::test_lg01_vortex_preserves_on_axis_null
+# is approximated via the volume centre voxel).
+model: surface_pipeline
+backend: analytical
+
+laser:
+  a0: 5.0
+  wavelength_um: 0.8
+  duration_fs: 30.0
+  polarization: p
+  envelope: gaussian
+  angle_deg: 0.0
+  spatial_profile: super_gaussian
+  spot_fwhm_um: 3.0
+  super_gaussian_order: 4
+
+target:
+  kind: overdense
+  material: SiO2
+  t_HDR_fs: 351.0
+  prepulse_intensity_rel: 1.0e-3
+  prepulse_delay_fs: 100.0
+
+laser_array:
+  geometry: tetrahedral
+  placement: faces
+  polarization_mode: radial
+  structured_mode: lg
+  structured_mode_params:
+    l: 1
+    p: 0
+
+numerics:
+  pipeline_grid: 64
+  pipeline_dx_um: 0.10
+  diag_harmonics: [1, 5, 15, 30]
+  chf_focal_volume_n: 8
+  chf_focal_volume_extent_um: 1.0
+  chf_focal_volume_mode: volume

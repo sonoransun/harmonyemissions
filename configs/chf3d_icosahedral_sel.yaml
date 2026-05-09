@@ -1,0 +1,51 @@
+# chf3d Phase C — 20-driver icosahedral coherent multi-beam scaled to the
+# Shanghai SEL 50-PW class (a₀ = 130, 15 fs). At σ → 0 phase locking the
+# closed-form gain is N²·F_geom·Γ_2D² ≈ 400·F_geom·Γ_2D², which combined
+# with the a₀³ CHF scaling pushes the post-CHF intensity well past the
+# Schwinger limit (modulo F_geom ≲ 1 and the realistic phase-locking σ
+# achievable on independent OPCPA chains — see docs/chf3d.md).
+model: surface_pipeline
+backend: analytical
+
+laser:
+  a0: 130.0
+  wavelength_um: 0.8
+  duration_fs: 15.0
+  polarization: p
+  envelope: gaussian
+  angle_deg: 0.0
+  spatial_profile: super_gaussian
+  spot_fwhm_um: 1.5
+  super_gaussian_order: 8
+
+target:
+  kind: overdense
+  material: SiO2
+  n_over_nc: 200.0
+  gradient_L_over_lambda: 0.10
+  reflectivity: 0.55
+  t_HDR_fs: 351.0
+  prepulse_intensity_rel: 1.0e-4
+  prepulse_delay_fs: 50.0
+
+laser_array:
+  geometry: icosahedral
+  placement: faces
+  polarization_mode: uniform_p
+  # 20 beams, matched energy: 1/√20 ≈ 0.2236
+  per_beam_a0_scale:
+    [0.2236, 0.2236, 0.2236, 0.2236, 0.2236,
+     0.2236, 0.2236, 0.2236, 0.2236, 0.2236,
+     0.2236, 0.2236, 0.2236, 0.2236, 0.2236,
+     0.2236, 0.2236, 0.2236, 0.2236, 0.2236]
+
+numerics:
+  n_periods: 20.0
+  samples_per_period: 512
+  pipeline_grid: 96
+  pipeline_dx_um: 0.08
+  diag_harmonics: [1, 60, 150, 300]
+  chf_focal_volume_n: 16
+  chf_focal_volume_extent_um: 0.5
+  chf_focal_volume_mode: volume
+  phase_optimiser: analytic

@@ -69,6 +69,38 @@ def harmonic_far_field(
     return u_far, dx_far
 
 
+def stack_harmonics_far_amplitude(
+    u0: np.ndarray,
+    a0_map: np.ndarray,
+    dent_map_lambda: np.ndarray,
+    harmonics: np.ndarray,
+    angle_deg: float,
+    dx: float,
+    wavelength_m: float,
+    focus_distance_m: float,
+    cutoff_mode: CutoffMode = CutoffMode.LOGISTIC,
+) -> tuple[np.ndarray, np.ndarray]:
+    """Compute U(x,y,z,n) (complex amplitude) for every n in ``harmonics``.
+
+    Returns ``(amplitudes_nxy, dx_far_per_n)`` where ``amplitudes_nxy``
+    has shape ``(len(harmonics), N, N)`` and dtype ``complex128``. This
+    is the load-bearing entry point for the chf3d coherent-superposition
+    accumulator, which needs the complex field to sum across drivers.
+    """
+    harmonics = np.asarray(harmonics, dtype=int)
+    n_grid = u0.shape[0]
+    out = np.zeros((harmonics.size, n_grid, n_grid), dtype=np.complex128)
+    dx_out = np.zeros(harmonics.size, dtype=float)
+    for i, n in enumerate(harmonics):
+        u_far, dx_far = harmonic_far_field(
+            u0, a0_map, dent_map_lambda, int(n), angle_deg,
+            dx, wavelength_m, focus_distance_m, cutoff_mode,
+        )
+        out[i] = u_far
+        dx_out[i] = dx_far
+    return out, dx_out
+
+
 def stack_harmonics_far_field(
     u0: np.ndarray,
     a0_map: np.ndarray,
@@ -82,19 +114,12 @@ def stack_harmonics_far_field(
 ) -> tuple[np.ndarray, np.ndarray]:
     """Compute |U(x,y,z,n)|² for every n in ``harmonics``.
 
-    Returns ``(intensities_nxy, dx_far_per_n)`` where intensities_nxy has
-    shape ``(len(harmonics), N, N)`` and dx_far_per_n has length
-    ``len(harmonics)``.
+    Returns ``(intensities_nxy, dx_far_per_n)``. Equivalent to
+    ``np.abs(stack_harmonics_far_amplitude(...))**2`` — the intensity
+    wrapper around the amplitude API used by the legacy single-beam tail.
     """
-    harmonics = np.asarray(harmonics, dtype=int)
-    n_grid = u0.shape[0]
-    out = np.zeros((harmonics.size, n_grid, n_grid), dtype=float)
-    dx_out = np.zeros(harmonics.size, dtype=float)
-    for i, n in enumerate(harmonics):
-        u_far, dx_far = harmonic_far_field(
-            u0, a0_map, dent_map_lambda, int(n), angle_deg,
-            dx, wavelength_m, focus_distance_m, cutoff_mode,
-        )
-        out[i] = intensity(u_far)
-        dx_out[i] = dx_far
-    return out, dx_out
+    amps, dx_out = stack_harmonics_far_amplitude(
+        u0, a0_map, dent_map_lambda, harmonics, angle_deg,
+        dx, wavelength_m, focus_distance_m, cutoff_mode,
+    )
+    return intensity(amps), dx_out

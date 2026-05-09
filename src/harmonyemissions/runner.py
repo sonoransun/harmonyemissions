@@ -57,13 +57,24 @@ def simulate(
 
 def simulate_from_config(config: RunConfig) -> Result:
     """Convenience: run a simulation described by a :class:`RunConfig`."""
-    if config.laser_array is not None:
-        raise NotImplementedError(
-            "laser_array (3-D multi-beam coherent harmonic focus) is parsed and "
-            "validated, but the runtime pipeline lands in Phase C. Run the "
-            "single-beam pipeline by removing the 'laser_array' block from your "
-            "config, or wait for the chf3d release."
+    extreme_power = getattr(config, "extreme_power", None)
+    if config.laser_array is not None or extreme_power is not None:
+        # Multi-beam path — only ``surface_pipeline`` is supported (the
+        # regime check is enforced by ``RunConfig._check_regime_match``).
+        from harmonyemissions.models.surface_pipeline import SurfacePipelineModel
+
+        laser = config.laser.build()
+        target = config.target.build()
+        result = SurfacePipelineModel().run(
+            laser, target, config.numerics,
+            laser_array=config.laser_array,
+            extreme_power=extreme_power,
         )
+        result.provenance.setdefault("laser", laser.__dict__.copy())
+        result.provenance.setdefault("target", target.__dict__.copy())
+        result.provenance.setdefault("model", config.model)
+        result.provenance.setdefault("backend", config.backend)
+        return result
     return simulate(
         laser=config.laser.build(),
         target=config.target.build(),
